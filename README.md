@@ -4,6 +4,8 @@ A reusable agentic coding workflow template for [OpenCode](https://opencode.ai) 
 
 > Named after Huginn, one of Odin's ravens — representing *thought*.
 
+<img width="1584" height="672" alt="Huginn" src="https://github.com/user-attachments/assets/8aa634b8-5671-4c30-86e4-a78f8e278cca" />
+
 ---
 
 ## Table of Contents
