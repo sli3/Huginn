@@ -1,21 +1,9 @@
-# bash-style
-
-**name:** bash-style  
-**description:** Bash scripting standards for this project. Apply these rules whenever writing or editing any `.sh` file.
-
+---
+name: bash-style
+description: Bash scripting standards for this project. Apply automatically whenever writing a new Bash script, editing an existing .sh file, or reviewing a script in code-sanity-check.
 ---
 
 ## Bash Style Guide
-
-### Trigger
-
-Apply automatically whenever:
-
-- Writing a new Bash script
-- Editing an existing `.sh` file
-- Reviewing a script in `code-sanity-check`
-
----
 
 ### Standards
 

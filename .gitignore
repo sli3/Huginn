@@ -1,5 +1,4 @@
-# OpenCode
-opencode.json
+# OpenCode — session memos are working notes, not part of the codebase
 .session-memos/
 node_modules/
 

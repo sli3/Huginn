@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "[PROVIDER-ID]/[MODEL-ID]",
+  "provider": {
+    "[PROVIDER-ID]": {
+      "apiKey": "[API-KEY]",
+      "baseURL": "http://[SERVER-IP]:[PORT]/v1"
+    }
+  },
+  "mcp": {
+    "local-files": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "[ABSOLUTE-PATH-TO-PROJECT]"],
+      "enabled": true
+    }
+  },
+  "autoupdate": false
+}

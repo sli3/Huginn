@@ -1,21 +1,9 @@
-# code-sanity-check
-
-**name:** code-sanity-check  
-**description:** Logic and syntax verification for Bash and C code.
-
+---
+name: code-sanity-check
+description: Logic and syntax verification for Bash and C code. Run when user says "sanity check", "check this", or "verify this script". Always run before committing any new or heavily modified script.
 ---
 
 ## Sanity Check Protocol
-
-### Trigger
-
-Run when:
-
-- User says `"sanity check"`, `"check this"`, or `"verify this script"`
-- Before committing any new or heavily modified script
-- After a Code session when the agent made structural changes
-
----
 
 ### Steps
 

@@ -78,6 +78,7 @@ Note your server IP and port — you'll need them in `opencode.json`.
 # From your project root
 cp -r /path/to/Huginn/.opencode ./
 cp /path/to/Huginn/opencode.json ./
+cp /path/to/Huginn/AGENTS.md ./
 cp /path/to/Huginn/.gitignore ./   # or append if you have one
 mkdir -p .session-memos
 ```
@@ -90,17 +91,16 @@ Open `opencode.json` and replace every `[PLACEHOLDER]`:
 
 | Placeholder | Replace with |
 |-------------|-------------|
+| `[PROVIDER-ID]` | A name for your local provider (e.g. `local`) |
+| `[MODEL-ID]` | The model ID shown by llama.cpp `/v1/models` (e.g. `local/qwen2.5-coder`) |
 | `[SERVER-IP]` | Your llama.cpp server IP (e.g. `192.168.1.100`) |
 | `[PORT]` | Your server port (e.g. `8080`) |
 | `[API-KEY]` | Any string — llama.cpp does not validate it (e.g. `local`) |
-| `[DEFAULT-MODEL]` | The model ID you want as default |
-| `[MODEL-ID-1]` | Your model's identifier (check llama.cpp `/v1/models`) |
-| `[Model Display Name]` | Friendly name shown in OpenCode |
-| `[ABSOLUTE-PATH-TO-PROJECT]` | Full path to your project root |
+| `[ABSOLUTE-PATH-TO-PROJECT]` | Full path to your project root (for the MCP filesystem server) |
 
-### Step 3 — Configure `agent.md`
+### Step 3 — Configure `AGENTS.md`
 
-Open `.opencode/agent.md` and fill in:
+Open `AGENTS.md` at the project root and fill in:
 
 | Placeholder | Replace with |
 |-------------|-------------|
@@ -238,7 +238,7 @@ memo, this was a Review session
 
 ## 5. Skills Reference
 
-Skills live in `.opencode/skills/`. OpenCode loads them automatically at startup.
+Skills live in `.opencode/skills/`. OpenCode loads them automatically at startup via the native skill tool.
 
 | Skill | Trigger | What it does |
 |-------|---------|--------------|
@@ -323,7 +323,7 @@ After saving a memo, open it in your editor and add any mistakes you noticed tha
 | `Ctrl+K` | Open model/config picker |
 | `Esc` | Focus input box |
 | `↑` / `↓` | Scroll through chat history |
-| `Tab` | Autocomplete file paths in input |
+| `Tab` | Switch between primary agents (Build / Plan) |
 
 > **Tip:** When context is getting full (OpenCode shows a warning), start a new session and paste the **Next Session Starter** from your latest memo.
 
@@ -345,9 +345,6 @@ When the agent needs context, ask it to read only the relevant function:
 Read only the [function_name] function in [file.sh]
 ```
 
-### Use compaction
-`opencode.json` has `"compaction": { "enabled": true, "threshold": 0.85 }`. This auto-compacts the context when it reaches 85% full. Keep this enabled.
-
 ### Watch the context indicator
 OpenCode shows a token usage bar. When it hits ~70%, finish the current task, save the memo, and start a new session.
 
@@ -358,34 +355,36 @@ Use the MCP `local-files` server instead — the agent can read files directly w
 
 ## 9. Customising for Your Project
 
-### `agent.md` — what to change
+### `AGENTS.md` — what to change
 
 | Section | What to customise |
 |---------|------------------|
 | **Role** | Change `[ROLE]` to match your stack (e.g. `Python developer`, `C systems programmer`) |
 | **Project Context** | Fill in your real filenames, tasks, target environment, and repo URL |
 | **Safety Gates** | Add project-specific rules (e.g. "never restart the production service without asking") |
-| **Thinking Mode** | If your model does not support `/no_think`, remove that line |
 
 ### `opencode.json` — what to change
 
 | Key | What to set |
 |-----|------------|
-| `model` | Change to your preferred default model ID |
-| `baseURL` | Your llama.cpp server address |
-| `models` | Add/remove model entries as needed |
-| `max_tokens` | Adjust per model — check your model's context size |
-| `mcp.local-files.command` | Set the absolute path to your project root |
-| `compaction.threshold` | Lower to `0.75` if your model has a small context window |
+| `model` | `[PROVIDER-ID]/[MODEL-ID]` — your local model |
+| `provider.[PROVIDER-ID].baseURL` | Your llama.cpp server address |
+| `provider.[PROVIDER-ID].apiKey` | Any string (llama.cpp ignores this) |
+| `mcp.local-files.args` | Set the absolute path to your project root |
 
 ### Adding a new skill
 
 1. Create a new folder in `.opencode/skills/[skill-name]/`
-2. Add a `SKILL.md` with:
-   - `name:` and `description:` at the top
-   - A clear **Trigger** section
-   - Numbered **Steps**
-   - A **Rules** section
+2. Add a `SKILL.md` with required YAML frontmatter:
+   ```markdown
+   ---
+   name: skill-name
+   description: What it does and when to trigger. Use trigger words in this description.
+   ---
+   
+   ## Instructions
+   ...
+   ```
 3. OpenCode will auto-load it at next startup.
 
 ### Removing skills you don't need
@@ -394,18 +393,21 @@ Simply delete the skill folder. The remaining skills are unaffected.
 
 ### Using a cloud model instead of local
 
-Replace the `provider` block in `opencode.json`:
+Replace the provider block in `opencode.json`:
 
 ```json
-"provider": {
-  "anthropic": {
-    "apiKey": "your-api-key-here"
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-5",
+  "provider": {
+    "anthropic": {
+      "apiKey": "your-api-key-here"
+    }
   }
-},
-"model": "anthropic/claude-sonnet-4-20250514"
+}
 ```
 
-The skills and `agent.md` work identically with any model.
+The skills and `AGENTS.md` work identically with any model.
 
 ---
 
@@ -420,8 +422,6 @@ The skills and `agent.md` work identically with any model.
 2. Revert the unintended change: `git checkout [file]`
 3. Add a Mistakes entry to the session memo: `Scope Creep — changed [X] when only [Y] was authorised`
 4. The preflight skill will read this mistake before the next Code session
-
-**Prevention:** The preflight skill and Edit Rules in `agent.md` both reinforce single-change discipline. If it happens repeatedly, add a project-specific rule to `agent.md`.
 
 ---
 
@@ -446,8 +446,6 @@ The skills and `agent.md` work identically with any model.
 3. Paste the **Next Session Starter** from the memo
 4. Run preflight again
 
-**Prevention:** Save a memo every 20–30 minutes. Watch the context indicator.
-
 ---
 
 ### The MCP `local-files` server won't connect
@@ -455,7 +453,7 @@ The skills and `agent.md` work identically with any model.
 **Why it happens:** The absolute path in `opencode.json` is wrong, or `npx` can't reach the registry.
 
 **Fix:**
-1. Confirm the path: `echo $PWD` — use this exact output in `opencode.json`
+1. Confirm the path: `echo $PWD` — use this exact output in `opencode.json` under `mcp.local-files.args`
 2. Pre-download the MCP package: `npx @modelcontextprotocol/server-filesystem --help`
 3. Check Node.js version: `node --version` — must be ≥ 18
 
@@ -467,7 +465,7 @@ The skills and `agent.md` work identically with any model.
 
 **Fix:**
 1. Be explicit: `Run the code-preflight skill now — follow every step in order`
-2. Check that the skill folder name and `SKILL.md` filename are correct
+2. Confirm OpenCode is loading skills: run `/skills` in the TUI to list available skills
 3. Restart OpenCode — skills are loaded at startup
 
 ---
@@ -488,7 +486,7 @@ The skills and `agent.md` work identically with any model.
 **Why it happens:** The model confused Bash with another language.
 
 **Fix:** Remind it: `Use # for Bash comments — not //`  
-Add this to `agent.md` under Edit Rules if it happens repeatedly.
+Add this to `AGENTS.md` under Edit Rules if it happens repeatedly.
 
 ---
 
@@ -517,4 +515,23 @@ These settings work well for coding tasks on llama.cpp. Adjust to taste.
 
 ---
 
-*Template version 1.0 — built for OpenCode with llama.cpp local inference.*
+## File Structure
+
+```
+your-project/
+├── AGENTS.md                          # OpenCode project instructions (edit this)
+├── opencode.json                      # OpenCode config: model, provider, MCP (edit this)
+├── .gitignore
+├── .session-memos/                    # Auto-created; gitignored working notes
+└── .opencode/
+    └── skills/
+        ├── bash-style/SKILL.md
+        ├── code-preflight/SKILL.md
+        ├── code-sanity-check/SKILL.md
+        ├── git-workflow/SKILL.md
+        └── session-memo/SKILL.md
+```
+
+---
+
+*Template version 2.0 — built for OpenCode with llama.cpp local inference.*

@@ -1,21 +1,9 @@
-# code-preflight
-
-**name:** code-preflight  
-**description:** Pre-flight checklist for Code sessions. Run at the start of every Code session before touching any file.
-
+---
+name: code-preflight
+description: Pre-flight checklist for Code sessions. Run at the start of every Code session before touching any file. Triggers on "run preflight", "preflight check", or at the start of any Code session.
 ---
 
 ## Code Pre-Flight Checklist
-
-### Trigger
-
-Run when:
-
-- User starts a Code session
-- User says `"run preflight"` or `"preflight check"`
-- Always before any file edits in a Code session
-
----
 
 ### Steps
 

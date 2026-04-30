@@ -1,31 +1,17 @@
-# session-memo
-
-**name:** session-memo  
-**description:** Summarise the current session and save a timestamped memo to `.session-memos/` in the project root. Trigger on demand with "memo", "save session", or "end session".
-
+---
+name: session-memo
+description: Summarise the current session and save a timestamped memo to .session-memos/ in the project root. Triggers on "memo", "memo this was a [Type] session", "save session", "summarise session", or "end session".
 ---
 
 ## Session Memo Protocol
 
-### Trigger
-
-Run this skill when the user says any of:
-
-- `"memo, this was a [Type] session"` — use the provided type directly
-- `"memo"` — ask the user for session type before proceeding
-- `"save session"` / `"summarise session"` / `"end session"`
-
-If the session type is not stated, ask:
-
-> "What type was this session? (Explore / Plan / Code / Review / Mixed)"
-
-and wait for the answer before writing the memo.
-
----
-
 ### Steps
 
-1. **Summarise** — Generate a concise session summary containing:
+1. **Determine session type** — if not stated, ask:
+   > "What type was this session? (Explore / Plan / Code / Review / Mixed)"
+   Wait for the answer before writing.
+
+2. **Summarise** — Generate a concise session summary containing:
    - Session type (Explore / Plan / Code / Review)
    - What was discussed or decided (2–3 lines max)
    - What was changed or written (list files and functions touched)
@@ -33,20 +19,19 @@ and wait for the answer before writing the memo.
    - Any important decisions or rejected approaches
    - Any mistakes made this session with their category
 
-2. **Create memo directory:**
+3. **Create memo directory:**
    ```bash
    mkdir -p .session-memos
    ```
-   *(Safe to run even if directory exists)*
 
-3. **Write memo file** — get timestamp with bash:
+4. **Write memo file** — get timestamp with bash:
    ```bash
    TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
    MEMO_FILE=".session-memos/${TIMESTAMP}.md"
    ```
    Never overwrite existing memos — always fresh timestamp.
 
-4. **Memo format:**
+5. **Memo format:**
 
 ```markdown
 # Session Memo — [YYYY-MM-DD HH:MM]
@@ -82,7 +67,6 @@ and wait for the answer before writing the memo.
 ## Mistakes Made
 - [exact description] — Category: [Scope Creep / Safety Violation / Logic Error / Process Skip]
 - None *(if no mistakes)*
-  *(user may add to this manually after saving)*
 
 ## Not Finished
 - [up to 3 clear next steps]
@@ -91,7 +75,7 @@ and wait for the answer before writing the memo.
 [One specific actionable opening message for the next session]
 ```
 
-5. **Confirm** — print file path only:
+6. **Confirm** — print file path only:
    ```
    Memo saved to .session-memos/[timestamp].md
    ```

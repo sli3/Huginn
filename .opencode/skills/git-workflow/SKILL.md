@@ -1,21 +1,9 @@
-# git-workflow
-
-**name:** git-workflow  
-**description:** Secure Git workflow with review gates and UK English commit standards.
-
+---
+name: git-workflow
+description: Secure Git workflow with review gates and UK English commit standards. Triggers on "commit", "git commit", "push", or "save to git". Always run after code-sanity-check passes.
 ---
 
 ## Secure Git Workflow
-
-### Trigger
-
-Run when:
-
-- User says `"commit"`, `"git commit"`, `"push"`, or `"save to git"`
-- At the end of any Code session where files were changed
-- Always after `code-sanity-check` passes
-
----
 
 ### Steps
 

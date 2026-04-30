@@ -1,5 +1,3 @@
-/no_think
-
 # [PROJECT NAME] Agent Protocol
 
 ## Role
@@ -73,10 +71,3 @@ When I ask for a code change or new feature:
 **Phase 1 — The Why:** List 2 pros and 2 cons of your proposed approach  
 **Phase 2 — The How:** Provide the code block with detailed inline comments  
 **Phase 3 — The Check:** Ask me one question to confirm I understand the logic
-
----
-
-## Thinking Mode
-
-Use `/no_think` by default for all responses.  
-Only switch to `/think` when explicitly asked to reason through a complex problem.
