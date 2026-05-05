@@ -68,6 +68,19 @@ npx --version
 
 Note your server IP and port — you'll need them in `opencode.json`.
 
+### Optional: OpenRouter (for code-reviewer skill)
+
+The `code-reviewer` skill works best with a code-focused cloud model. If you want to use it:
+
+1. Create a free account at [openrouter.ai](https://openrouter.ai)
+2. Generate an API key
+3. Add OpenRouter as a second provider in `opencode.json` (see [Section 9](#9-customising-for-your-project))
+4. Switch to `openrouter/qwen/qwen3-coder:free` manually with `Ctrl+K` before triggering a review
+
+The free tier allows 200 requests per day. The `bug-hunt-loop` skill should always run on your local model to preserve this quota.
+
+> **Important:** Skills cannot detect or switch the active model themselves. Model selection is always a manual action via `Ctrl+K` in the TUI.
+
 ---
 
 ## 3. Quick Setup
@@ -247,6 +260,8 @@ Skills live in `.opencode/skills/`. OpenCode loads them automatically at startup
 | `code-sanity-check` | `"sanity check"`, `"check this script"` | Runs shellcheck, checks logic, idempotency, and flags suspicious flags |
 | `git-workflow` | `"commit"`, `"push"`, `"save to git"` | Staged file review → diff gate → UK English commit → push gate |
 | `bash-style` | Applied automatically during script writes/edits | Enforces shebang, `set -euo pipefail`, quoting, snake_case functions, stderr for errors |
+| `code-reviewer` | `"review"`, `"code review"`, `"review this function"`, `"review [filename]"` | Reads `AGENTS.md` and latest memo for context, extracts named function, redacts sensitive values, reports bugs, logic errors, environment mismatches, and regressions. Never edits. Best used with cloud model — see note below. |
+| `bug-hunt-loop` | `"bug hunt"`, `"hunt bugs"`, `"fix and run"`, `"run bug hunt on [filename]"` | Detects language, runs file, captures stdout/stderr, proposes and applies a targeted fix, re-runs. Hard cap of 3 iterations. Shows a diff before every edit. Writes `bug-hunt-report.md` on failure. Run on local model only. |
 
 ### Triggering skills manually
 
@@ -262,8 +277,24 @@ Run the code-sanity-check skill on setup.sh
 Run the git-workflow skill
 ```
 ```
+Run the code-reviewer skill on setup.sh :: rotate_logs
+```
+```
+Run the bug hunt on setup.sh
+```
+```
 memo, this was a Code session
 ```
+
+### Model selection for skills
+
+> Skills cannot detect which model is active or switch models themselves. Model selection is always a manual action in the TUI.
+
+| Skill | Recommended model | How to switch |
+|-------|------------------|---------------|
+| `code-reviewer` | `openrouter/qwen/qwen3-coder:free` | Press `Ctrl+K` before triggering |
+| `bug-hunt-loop` | Your local llama.cpp model | Ensure you are on local before triggering — each iteration consumes OpenRouter quota |
+| All others | Your local llama.cpp model | Default — no action needed |
 
 ---
 
@@ -371,6 +402,37 @@ Use the MCP `local-files` server instead — the agent can read files directly w
 | `provider.[PROVIDER-ID].baseURL` | Your llama.cpp server address |
 | `provider.[PROVIDER-ID].apiKey` | Any string (llama.cpp ignores this) |
 | `mcp.local-files.args` | Set the absolute path to your project root |
+
+### Adding OpenRouter as a second provider
+
+To use the `code-reviewer` skill with `qwen/qwen3-coder:free`, add OpenRouter alongside your local provider:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "[PROVIDER-ID]/[MODEL-ID]",
+  "provider": {
+    "[PROVIDER-ID]": {
+      "apiKey": "local",
+      "baseURL": "http://[SERVER-IP]:[PORT]/v1"
+    },
+    "openrouter": {
+      "apiKey": "your-openrouter-api-key-here"
+    }
+  },
+  "mcp": {
+    "local-files": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "[ABSOLUTE-PATH-TO-PROJECT]"],
+      "enabled": true
+    }
+  },
+  "autoupdate": false
+}
+```
+
+Switch between providers with `Ctrl+K` during a session. The default `model` field always points to your local model — you switch to OpenRouter manually only when triggering `code-reviewer`.
 
 ### Adding a new skill
 
@@ -490,6 +552,29 @@ Add this to `AGENTS.md` under Edit Rules if it happens repeatedly.
 
 ---
 
+### The bug-hunt-loop skill applied the same fix twice
+
+**Why it happens:** The local model lost track of what it already tried.
+
+**Fix:**
+1. The skill should have caught this via the "never repeat the same fix" rule — if it did not, the local model is not following instructions reliably
+2. Run `git diff` to see all changes made during the hunt
+3. Revert with `git checkout [file]` if needed
+4. Switch to a stronger local model or reduce file complexity before re-running
+
+---
+
+### The code-reviewer skill is not redacting sensitive values
+
+**Why it happens:** The model did not recognise the pattern, or the value is in a format the scan instruction did not cover.
+
+**Fix:**
+1. Before running a review on any file, manually check for credentials with: `grep -Ei "key=|token=|password=|secret=" [file]`
+2. Replace any real values with placeholders before the session
+3. Never rely solely on the skill's redaction for files you know contain live credentials
+
+---
+
 ## Appendix: Recommended Model Settings
 
 These settings work well for coding tasks on llama.cpp. Adjust to taste.
@@ -522,11 +607,14 @@ your-project/
 ├── AGENTS.md                          # OpenCode project instructions (edit this)
 ├── opencode.json                      # OpenCode config: model, provider, MCP (edit this)
 ├── .gitignore
+├── bug-hunt-report.md                 # Auto-created by bug-hunt-loop on failure; review and delete
 ├── .session-memos/                    # Auto-created; gitignored working notes
 └── .opencode/
     └── skills/
         ├── bash-style/SKILL.md
+        ├── bug-hunt-loop/SKILL.md
         ├── code-preflight/SKILL.md
+        ├── code-reviewer/SKILL.md
         ├── code-sanity-check/SKILL.md
         ├── git-workflow/SKILL.md
         └── session-memo/SKILL.md
@@ -534,4 +622,4 @@ your-project/
 
 ---
 
-*Template version 2.0 — built for OpenCode with llama.cpp local inference.*
+*Template version 2.1 — added code-reviewer and bug-hunt-loop skills.*
